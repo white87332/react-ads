@@ -1,0 +1,4 @@
+node_modules/*
+.eslintcache
+package-lock.json
+public/asset/video/*
