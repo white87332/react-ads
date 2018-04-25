@@ -6,7 +6,7 @@ import 'videojs-contrib-hls';
 import 'video.js/dist/video-js.css';
 import { SCContainer, SCAd, SCAdChild, SCAdChildContent, Skip } from './utils/style';
 
-class ReactAds extends React.Component
+export default class ReactAds extends React.Component
 {
     static propTypes = {
         type: PropTypes.string,
@@ -26,11 +26,26 @@ class ReactAds extends React.Component
     {
         if (prevState.type !== nextProps.type || prevState.url !== nextProps.url || nextProps.adUrl !== prevState.adUrl)
         {
-            return {
-                type: nextProps.type,
-                url: nextProps.url,
-                adUrl: nextProps.adUrl
-            };
+            if (nextProps.type === 'video')
+            {
+                return {
+                    type: nextProps.type,
+                    url: nextProps.url,
+                    adUrl: nextProps.adUrl
+                };
+            }
+            else if (nextProps.type === 'html')
+            {
+                return {
+                    type: nextProps.type,
+                    url: '',
+                    adUrl: ''
+                };
+            }
+            else
+            {
+                return null;
+            }
         }
         else
         {
@@ -66,15 +81,28 @@ class ReactAds extends React.Component
     {
         this.videoPlayer = videojs(this.videoRef.current);
         this.videoPlayer.src({ src: this.state.url });
-        this.videoPlayer.play();
 
         if (this.state.adUrl)
         {
-            setTimeout(() => {
-                this.startAd();
-            }, 2000);
+            this.startAd();
+        }
+        else
+        {
+            this.videoPlayer.play();
         }
     }
+
+    // shouldComponentUpdate(nextProps)
+    // {
+    //     if (this.props.type === nextProps.type && this.props.url === nextProps.url && nextProps.adUrl === this.props.adUrl)
+    //     {
+    //         return false;
+    //     }
+    //     else
+    //     {
+    //         return true;
+    //     }
+    // }
 
     startAd()
     {
@@ -85,6 +113,10 @@ class ReactAds extends React.Component
 
         this.videoAdPlayer.on('loadeddata', () => {
             this.videoAdPlayer.play();
+
+            this.videoAdPlayer.on('ended', () => {
+                this.skipAd();
+            });
 
             this.id = setInterval(() => {
                 this.countDown -= 1;
@@ -110,7 +142,7 @@ class ReactAds extends React.Component
 
         this.setState(update(this.state, {
             type: { $set: '' },
-            // adUrl: { $set: '' },
+            adUrl: { $set: '' },
             styles: {
                 ad: { $set: 'ad' },
                 skip: { $set: 'skip' },
@@ -137,53 +169,25 @@ class ReactAds extends React.Component
 
     render()
     {
-        let styleAdVideo = {
-            style: {
-                display: 'none'
-            }
-        };
-
-        let styleadHtml = {
-            style: {
-                display: 'none'
-            }
-        };
-
-        switch (this.state.type)
-        {
-            case 'video':
-                styleAdVideo = {
-                    style: {
-                        display: 'block'
-                    }
-                };
-                break;
-
-            case 'html':
-                styleadHtml = {
-                    style: {
-                        display: 'block'
-                    }
-                };
-                break;
-            default:
-        }
+        const { type, styles } = this.state;
+        let styleAdVideo = (type === 'video') ? { display: 'block' } : { display: 'none' };
+        let styleAdHtml = (type === 'html') ? { display: 'block' } : { display: 'none' };
 
         return (
             <SCContainer>
 
-                <video className="video-js vjs-default-skin" ref={this.videoRef} autoPlay controls />
+                <video className="video-js vjs-default-skin" ref={this.videoRef} controls />
 
-                <SCAd show={this.state.styles.ad}>
+                <SCAd show={styles.ad}>
                     <SCAdChild>
 
                         <SCAdChildContent>
 
                             {/* ad video */}
-                            <video style={styleAdVideo} className="video-js vjs-default-skin" ref={this.videoAdRef} autoPlay />;
+                            <video style={styleAdVideo} className="video-js vjs-default-skin" ref={this.videoAdRef} />;
 
                             {/* ad html */}
-                            <div style={styleadHtml} dangerouslySetInnerHTML={null} />;
+                            <div className="html" style={styleAdHtml} dangerouslySetInnerHTML={null} />;
 
                         </SCAdChildContent>
 
@@ -196,5 +200,3 @@ class ReactAds extends React.Component
         );
     }
 }
-
-export default ReactAds;

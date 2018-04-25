@@ -60,7 +60,8 @@ export const SCAdChildContent = styled.div`
     width: 100%;
     height: 100%;
 
-    > video
+     > video,
+     > .html
     {
         width: 100%;
         height: 100%;
