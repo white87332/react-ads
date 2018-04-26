@@ -106,7 +106,7 @@ export default class ReactAds extends React.Component
 
     startAd()
     {
-        this.countDown = 5;
+        this.countDown = this.props.skipTime;
 
         this.videoAdPlayer = videojs(this.videoAdRef.current);
         this.videoAdPlayer.src({ src: this.state.adUrl });
